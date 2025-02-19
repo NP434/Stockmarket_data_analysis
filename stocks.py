@@ -24,10 +24,13 @@ def download_data(ticker: str)-> dict:
     headers = {"user-agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"} #Allows acces to the website
     try:
         """This section is is where the data is pulled and converted into a dictionary"""
-        response = get((URL), headers=headers)
+        response = get((URL), headers=headers) 
         raw_data = response.json() #Converts the data to json
-        data = sorted(raw_data['data']["tradesTable"]["rows"], key = lambda x: x['date']) #This combs through and retrieves all the rows with actual stock data
-        data_dict = {item["date"]: item for item in data} #This creates a dictionary with the keys being the dates of the reported stock prices.
+        if raw_data['data'] == None:
+            data_dict = None
+        else:
+            data = sorted(raw_data['data']["tradesTable"]["rows"], key = lambda x: x['date']) #This combs through and retrieves all the rows with actual stock data
+            data_dict = {item["date"]: item for item in data} #This creates a dictionary with the keys being the dates of the reported stock prices.
         return data_dict
     except Exception as e:
         print(e)
@@ -65,7 +68,10 @@ def data_processing(data_dict: dict, ticker: str) -> dict:
 def data_package(ticker: str)->dict:
     """This is a helper function that calls the download data and data processing functions, and returns the fully"""
     intermediate_data = download_data(ticker) 
-    end_dict = data_processing(intermediate_data,ticker)
+    if intermediate_data == None:
+        end_dict = {0:0}
+    else:
+        end_dict = data_processing(intermediate_data,ticker)
     return end_dict
 
 
@@ -79,9 +85,12 @@ if __name__ == "__main__":
             while i < len(sys.argv): #if there are multiple args, increments through them
                 ticker = sys.argv[i] # gets the inputed ticker arg
                 final_dict = data_package(ticker)
-                dump(final_dict, file, indent=4, sort_keys= True ) # places the data into the json file
-                i += 1 #increments the loop varaible
-                if i != len(sys.argv):
-                    file.write(",\n") #adds a new line after each data entry
+                if final_dict == {0:0}:
+                    print("Not a valid ticker")
+                    i+= 1
+                else:
+                    dump(final_dict, file, indent=4, sort_keys= True ) # places the data into the json file
+                    i += 1 #increments the loop varaible
+                    if i != len(sys.argv):
+                        file.write(",\n") #adds a new line after each data entry
             file.write("\n]")
-       
