@@ -75,10 +75,13 @@ if __name__ == "__main__":
     i = 1 
     if len(sys.argv) > 1: #checks if there are arguments when the program is called from the command line
         with open("Stocks.json", "w") as file: #opens the stocks.json file
+            file.write("[ \n")
             while i < len(sys.argv): #if there are multiple args, increments through them
                 ticker = sys.argv[i] # gets the inputed ticker arg
                 final_dict = data_package(ticker)
-                dump(final_dict, file) # places the data into the json file
-                file.write("\n") #adds a new line after each data entry
+                dump(final_dict, file, indent=4, sort_keys= True ) # places the data into the json file
                 i += 1 #increments the loop varaible
+                if i != len(sys.argv):
+                    file.write(",\n") #adds a new line after each data entry
+            file.write("\n]")
        
